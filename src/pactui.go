@@ -14,15 +14,20 @@ import (
 )
 
 var (
-    selectedMode    int
-    // packages        string
-    // search          string
-    // results         []string
-    selection       string
-    numPackages     int
-    pgCtr           int
-    pgCount         int
-    queryTitle      []string
+    selectedMode        int
+    packageInput        string
+    selectedPackages    []string
+    // search           string
+    // results          []string
+    selection           string
+    numPackages         int
+    pgCtr               int
+    pgCount             int
+    queryTitle          []string
+    visability          bool
+    errorTitle          string
+    errorDesc           string
+    packageCheckString  string
 )
 
 func getNumPackages() (int, int) {
@@ -154,7 +159,7 @@ func main() {
     application.Run()
     switch selectedMode {
     case 3:
-       queryPageRun()
+        queryPageRun()
     case 5:
     default:
         os.Exit(0)
@@ -201,4 +206,66 @@ func queryPageRun() {
         }
         queryPageRun()
     }
+}
+
+func validatePackages(packageString string) bool {
+    packageValArr := strings.Split(packageString, " ")
+    for i := 0; i < len(packageValArr); i++ {
+        packageCheckString = "^" + packageValArr[i] + "$"
+        output, err := exec.Command("pacman", "-Ssq", packageCheckString).Output()
+        if err != nil {
+            return false
+        }
+        if string(output) == "" || output == nil {
+            return false
+        }
+    }
+    return true
+}
+
+func writeInstallPageRun() {
+    writeInstallPage := huh.NewGroup(
+        huh.NewNote().
+            TitleFunc(func() string{
+                if visability {
+                    errorTitle = "ERROR:"
+                } else {
+                    errorTitle = ""
+                }
+                return errorTitle
+            }, &errorTitle).
+            DescriptionFunc(func() string {
+                if visability {
+                    errorDesc = "One or more of the packages does not exist, please check spelling"
+                } else {
+                    errorDesc = ""
+                }
+                return errorDesc
+            }, &errorDesc),
+        huh.NewInput().
+            Title("Install Packages").
+            Value(&packageInput),
+        huh.NewSelect[string]().
+            Options(huh.NewOption("Home", "home"),
+            huh.NewOption("Install", "install"),
+            ).
+            Value(&selection),
+        )
+
+    application := huh.NewForm(writeInstallPage)
+    application.Run()
+    if !validatePackages(packageInput) {
+        visability = true
+        writeInstallPageRun()
+    }
+    if selection == "home" {
+        main()
+    } else if selection == "install" {
+        installPageRun()
+    }
+
+}
+
+func installPageRun() {
+
 }
