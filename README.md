@@ -7,13 +7,13 @@ This project is graded
 This is going to be a Terminal User Interface (TUI) front end for [pacman](https://gitlab.archlinux.org/pacman/pacman) (Arch Linux's package manager)
 
 ## Planned options ##
-- Install
+- Install [Implemented]
     - Install packages listed in the text box
     - Provide a log after entering for the success or failure of the installation of the packages
 - Remove
     - Remove packages listed in the text box
     - Provide a log after entering for the success or failure of the removal of the packages
-- Query
+- Query [Implemented]
     - List all installed packages in a user readable format
 - Search
     - Search for a package in a user readable format
