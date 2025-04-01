@@ -146,10 +146,10 @@ func main() {
             Title("Welcome to PacTui").
             Options(
             huh.NewOption("Install a package", 0),
-            huh.NewOption("Remove a package", 1),
-            huh.NewOption("Search packages", 2),
+            huh.NewOption("Remove a package [Not Implemented]", 1),
+            huh.NewOption("Search packages [Not Implemented]", 2),
             huh.NewOption("Query packages", 3),
-            huh.NewOption("Configurate PacTui", 4),
+            huh.NewOption("Configure PacTui [Not Implemented]", 4),
             huh.NewOption("Exit PacTui", 5),
             ).
             Value(&selectedMode),
