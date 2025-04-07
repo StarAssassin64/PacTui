@@ -17,8 +17,6 @@ var (
     selectedMode     int
     packageInput     string
     selectedPackages []string
-    // search           string
-    // results          []string
     selection          string
     numPackages        int
     pgCtr              int
@@ -29,6 +27,7 @@ var (
     errorDesc          string
     packageCheckString string
     packageInstallLog  []byte
+	packageRemovalLog  []byte
     confTitle          string
 )
 
@@ -160,6 +159,8 @@ func main() {
     application := huh.NewForm(mainPage)
     application.Run()
     switch selectedMode {
+	case 1:
+		writeRemovalPageRun()
     case 3:
         queryPageRun()
     case 0:
@@ -225,6 +226,15 @@ func validatePackages(packageString string) bool {
         }
     }
     return true
+}
+
+func validateRemoval(packageString string) bool {
+	_, err := exec.Command("pacman", "-Qq", packageString).Output()
+	if err != nil {
+		return false
+	} else {
+		return true
+	}
 }
 
 func writeInstallPageRun() {
@@ -340,4 +350,114 @@ func installPackages(packages []string) bool {
     packageInstallLog, err = exec.Command("tail", "-40", string(packageInstallLog)).Output()
     println(string(packageInstallLog))
     return true
+}
+
+func writeRemovalPageRun() {
+    writeRemovalPage := huh.NewGroup(
+        huh.NewNote().
+            TitleFunc(func() string {
+                if visability {
+                    errorTitle = "ERROR:"
+                } else {
+                    errorTitle = ""
+                }
+                return errorTitle
+            }, &errorTitle).
+            DescriptionFunc(func() string {
+                if visability {
+                    errorDesc = "One or more of the packages does not exist, please check spelling"
+                } else {
+                    errorDesc = ""
+                }
+                return errorDesc
+            }, &errorDesc),
+        huh.NewInput().
+            Title("Remove Package").
+            Value(&packageInput),
+        huh.NewSelect[string]().
+            Options(huh.NewOption("Home", "home"),
+            huh.NewOption("Remove", "remove"),
+            ).Value(&selection),
+    )
+
+    application := huh.NewForm(writeRemovalPage)
+    application.Run()
+    if !validateRemoval(packageInput) {
+        visability = true
+        writeRemovalPageRun()
+    }
+    if selection == "home" {
+        main()
+    } else if selection == "remove" {
+        confTitle = packageInput
+        removalPageRun()
+    }
+}
+
+func removalPageRun() {
+    confirmationPage := huh.NewGroup(
+        huh.NewSelect[string]().
+            Title("Are you sure you want to remove "+confTitle).
+            Options(
+            huh.NewOption("Yes", "y"),
+            huh.NewOption("No", "n"),
+            ).Value(&selection),
+    )
+
+    successfulRemovalPage := huh.NewGroup(
+        huh.NewSelect[string]().
+            Title("Successfully Removed Package").
+            Options(
+            huh.NewOption("Home", "home"),
+            huh.NewOption("Back", "back"),
+            ).
+            Value(&selection),
+    )
+    failedRemovalPage := huh.NewGroup(
+        huh.NewNote().
+            Title("Failed Removing Package").
+            Description(string(packageRemovalLog)).
+            Height(40),
+        huh.NewSelect[string]().
+            Options(
+            huh.NewOption("Home", "home"),
+            huh.NewOption("Back", "back"),
+        ),
+    )
+
+    application := huh.NewForm(confirmationPage)
+    application.Run()
+    if selection == "y" {
+        returnValue := removePackage(confTitle)
+        if returnValue {
+            application = huh.NewForm(successfulRemovalPage)
+            application.Run()
+            if selection == "home" {
+                main()
+            }
+            if selection == "back" {
+                writeRemovalPageRun()
+            }
+        } else {
+            application = huh.NewForm(failedRemovalPage)
+            application.Run()
+            if selection == "home" {
+                main()
+            }
+            if selection == "back" {
+                writeRemovalPageRun()
+            }
+        }
+    }
+
+}
+
+func removePackage(packageString string) bool {
+	log, err := exec.Command("pacman", "-Ruv", packageString, "--noconfirm").Output()
+	packageRemovalLog = log
+	if err != nil {
+		return false
+	} else {
+		return true
+	}
 }
