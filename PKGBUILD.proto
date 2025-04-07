@@ -1,0 +1,31 @@
+# Maintainer: Star Probasco <star@starassassin64.com>
+pkgname=PacTUI
+pkgver=v0.8
+pkgrel=1
+epoch=
+pkgdesc="pacman, but in a Terminal User Interface using golang and huh?"
+arch=('x86_64')
+url="https://github.com/starassassin64/pactui"
+license=('WTFPL')
+groups=()
+depends=('pacman')
+makedepends=('go')
+checkdepends=()
+optdepends=()
+provides=()
+conflicts=()
+replaces=()
+backup=()
+options=()
+install=.install
+changelog=pactui.changelog
+source=("$pkgname-$pkgver.tar.gz"
+        "$pkgname-$pkgver.patch")
+noextract=()
+sha256sums=()
+validpgpkeys=('257B B940 6C4C 3B13 6826  AF24 A892 68CF EEB1 4081')
+
+package() {
+	cd "$pkgname-$pkgver"
+	make DESTDIR="$pkgdir/" install
+}
